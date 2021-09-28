@@ -78,7 +78,12 @@ jobs:
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt
-        echo "src-git ssrp https://github.com/fw876/helloworld.git" >> ./feeds.conf.default
+
+    - name: 设置缓存
+      uses: klever1988/cachewrtbuild@main
+      with:
+        ccache: 'true'
+        prefix: ${{ github.workspace }}/openwrt
         
     - name: 更新 & 安装 feeds
       working-directory: ./openwrt
@@ -90,8 +95,7 @@ jobs:
     - name: 自定义安装源
       working-directory: ./openwrt
       run: |
-        git clone https://github.com/kenzok8/litte package/litte
-        git clone https://github.com/xiaorouji/openwrt-passwall package/passwall
+        git clone https://github.com/kenzok8/small-package package/small-package
         
     - name: 自定义配置文件Lienol
       env:
@@ -101,9 +105,9 @@ jobs:
         chmod +x ./customize.sh && ./customize.sh
         cd openwrt && rm -rf package/litte/adguardhome
         rm -rf package/litte/luci-app-adguardhome
-        cp -f package/litte/commit/zzz-default-settings package/default-settings/files/zzz-default-settings
-        cp -f package/litte/commit/banner package/base-files/files/etc/banner
-        cp -f package/litte/commit/Lienoldiffconfig .config && make defconfig
+        cp -f package/small-package/diy/zzz-default-settings package/default-settings/files/zzz-default-settings
+        cp -f package/small-package/diy/banner package/base-files/files/etc/banner
+        cp -f package/small-package/diy/Lienoldiffconfig .config && make defconfig
         ./scripts/feeds update -a
         ./scripts/feeds install -a
         
@@ -113,12 +117,6 @@ jobs:
         make download -j$(nproc)
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-
-    - name: 设置缓存
-      uses: klever1988/cachewrtbuild@main
-      with:
-        ccache: 'true'
-        prefix: ${{ github.workspace }}/openwrt
 
     - name: 编译固件
       working-directory: ./openwrt
